@@ -1,10 +1,26 @@
 use open_gal::{CircuitConfig, TableData};
 use serde_json::{json, Map, Value};
 
-pub fn read_json(path: &str) -> Value{
+pub fn read_json(path: &str) -> Value {
     let json_str = std::fs::read_to_string(path).expect(&format!("file: {} not found", path));
     let json: Value = serde_json::from_str(&json_str).unwrap();
     json
+}
+
+pub fn td_from_json_vec(json: &Value) -> Option<Vec<TableData>> {
+    let mut table_data = Vec::new();
+    for val in json["TableData"].as_array()? {
+        table_data.push(table_data_from_json(val)?);
+    }
+
+    Some(table_data)
+}
+
+pub fn td_to_json_vec(table_data: &Vec<TableData>) -> Value {
+    let json_arr = table_data.iter().map(|td| table_data_to_json(td)).collect();
+    let mut map = Map::new();
+    map.insert("TableData".to_string(), Value::Array(json_arr));
+    Value::Object(map)
 }
 
 pub fn circuit_config_from_json(json: &Value) -> Option<CircuitConfig> {
@@ -69,22 +85,6 @@ fn table_data_from_json(json: &Value) -> Option<TableData> {
     };
 
     Some(table_data)
-}
-
-pub fn td_from_json_vec(json: &Value) -> Option<Vec<TableData>> {
-    let mut table_data = Vec::new();
-    for val in json["TableData"].as_array()? {
-        table_data.push(table_data_from_json(val)?);
-    }
-
-    Some(table_data)
-}
-
-pub fn td_to_json_vec(table_data: &Vec<TableData>) -> Value {
-    let json_arr = table_data.iter().map(|td| table_data_to_json(td)).collect();
-    let mut map = Map::new();
-    map.insert("TableData".to_string(), Value::Array(json_arr));
-    Value::Object(map)
 }
 
 #[cfg(test)]
